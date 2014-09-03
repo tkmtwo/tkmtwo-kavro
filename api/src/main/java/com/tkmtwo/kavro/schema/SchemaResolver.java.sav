@@ -1,0 +1,115 @@
+package com.tkmtwo.kavro.schema;
+
+
+import com.google.common.base.Charsets;
+import com.google.common.hash.Hashing;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableBiMap;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaNormalization;
+import org.apache.avro.generic.GenericContainer;
+
+
+/**
+ *
+ * Quick and dirty resolver.
+ *
+ * This needs to be replaced with a proper schema repository.
+ *
+ */
+public final class SchemaResolver {
+
+  private BiMap<String, Schema> subjectMap;
+  private BiMap<String, Schema> schemaMap;
+
+  
+  public SchemaResolver() {
+    init();
+  }
+  
+  
+  
+  private BiMap<String, Schema> getSchemaMap() {
+    if (schemaMap == null) {
+      schemaMap = HashBiMap.create();
+    }
+    return schemaMap;
+  }
+  private BiMap<String, Schema> getSubjectMap() {
+    if (subjectMap == null) {
+      subjectMap = HashBiMap.create();
+    }
+    return subjectMap;
+  }
+  
+  
+  
+  
+  public Schema getSchemaForId(String s) {
+    return getSchemaMap().get(s);
+  }
+  public String getSchemaId(Schema s) {
+    return getSchemaMap().inverse().get(s);
+  }
+  
+  public Schema getSchemaForSubject(String s) {
+    return getSubjectMap().get(s);
+  }
+  public String getSchemaSubject(Schema s) {
+    return getSubjectMap().inverse().get(s);
+  }
+
+  
+  
+  public BiMap<String, Schema> copyOfSchemaMap() {
+    return ImmutableBiMap.copyOf(getSchemaMap());
+  }
+  public BiMap<String, Schema> copyOfSubjectMap() {
+    return ImmutableBiMap.copyOf(getSubjectMap());
+  }
+  
+
+  private void init() {
+    /*
+    try {
+      addSchema(new RawResourceEvent());
+      addSchema(new RawResourceMetric());
+    } catch (Exception ex) {
+      ; //do nothing TODO:mahaffey
+    }
+    */
+  }
+  
+  
+  
+  public void addSchema(GenericContainer gc) {
+    if (gc == null) { return; }
+    
+    Schema schema = gc.getSchema();
+    if (schema.getType() != Schema.Type.RECORD) {
+      throw new IllegalArgumentException("I only know how do to 'records' and "
+                                         + gc.getClass() + " is not one.");
+    }
+    
+    String schemaFp = fingerprint(schema);
+    //String subjectName = gc.getClass().getSimpleName();
+    String subjectName = schema.getName();
+    
+    getSchemaMap().put(schemaFp, schema);
+    getSubjectMap().put(subjectName, schema);
+  }
+  
+  public static String fingerprint(Schema s) {
+    return Hashing
+      .sha256()
+      .hashString(SchemaNormalization.toParsingForm(s), Charsets.UTF_8)
+      .toString();
+  }
+  
+  
+}
