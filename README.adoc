@@ -44,6 +44,7 @@ Using a locally-installed Kafka and Zookeeper, the properties file
 should look something like this:
 
 [source,text]
+.$HOME/.gradle/resource/kavro-build.properties
 ----
 kafka.serializer.class=kafka.serializer.DefaultEncoder
 kafka.metadata.broker.list=127.0.0.1:9092
